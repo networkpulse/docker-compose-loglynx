@@ -1,0 +1,33 @@
+services:
+   loglynx:
+     container_name: loglynx
+     image: k0lin/loglynx:latest
+     restart: unless-stopped
+     environment:
+       - DB_PATH=/data/loglynx.db
+       - GEOIP_ENABLED=true  #if the geolite database are installed
+       - GEOIP_CITY_DB=/app/geoip/GeoLite2-City.mmdb  #only if GEOIP_ENABLED is set to true, It is not mandatory to set all three, even just one is fine (obviously it will work with limited functionality)
+       - GEOIP_COUNTRY_DB=/app/geoip/GeoLite2-Country.mmdb  #(only if GEOIP_ENABLED is set to true), It is not mandatory to set all three, even just one is fine (obviously it will work with limited functionality)
+       - GEOIP_ASN_DB=/app/geoip/GeoLite2-ASN.mmdb  #(only if GEOIP_ENABLED is set to true), It is not mandatory to set all three, even just one is fine (obviously it will work with limited functionality)
+       - TRAEFIK_LOG_PATH=/traefik/logs/access.log
+       - LOG_LEVEL=info
+       - SERVER_PRODUCTION=true
+       - PUID=1000
+       - PGID=1000
+       - TZ=Europe/Paris
+     volumes:
+       - /opt/containers/loglynx:/data
+       - /usr/share/GeoIP:/app/geoip                 
+       - /opt/containers/traefik/logs:/traefik/logs
+     networks:
+       - web  
+     labels:
+       - traefik.enable=true
+       - traefik.http.routers.loglynx.rule=Host(`loglynx.monsite.com`)
+       - traefik.http.routers.loglynx.entrypoints=websecure
+       - traefik.http.routers.loglynx.service=loglynx
+       - traefik.http.services.loglynx.loadbalancer.server.scheme=http
+       - traefik.http.services.loglynx.loadbalancer.server.port=8080
+networks:
+  web:
+    external: true
